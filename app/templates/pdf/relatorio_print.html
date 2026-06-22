@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatório - {{ session.uan_nome }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            @page { margin: 1.5cm; size: A4; }
+            body { font-size: 10pt; }
+            .card { break-inside: avoid; border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; font-size: 10pt; color: #1e293b; }
+        .header { text-align: center; border-bottom: 3px solid #1a56db; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { color: #1a56db; font-size: 18pt; }
+        .info-table td { padding: 4px 8px; border: 1px solid #e2e8f0; }
+        .info-table td:first-child { font-weight: bold; width: 120px; background: #f8fafc; }
+        .score-box { text-align: center; padding: 20px; border-radius: 8px; }
+        .score-box .score { font-size: 36pt; font-weight: bold; }
+        .cls-excelente { background: #059669; color: white; }
+        .cls-bom { background: #1a56db; color: white; }
+        .cls-regular { background: #d97706; color: white; }
+        .cls-critico { background: #dc2626; color: white; }
+        .red-flags { background: #fef2f2; border: 2px solid #dc2626; border-radius: 8px; padding: 15px; }
+        .red-flags h3 { color: #dc2626; font-size: 13pt; margin-top: 0; }
+        .module-section h2 { background: #f1f5f9; padding: 8px 12px; font-size: 12pt; border-left: 4px solid #1a56db; }
+        .resp-positive { background: #dcfce7; padding: 2px 6px; border-radius: 3px; }
+        .resp-negative { background: #fef2f2; padding: 2px 6px; border-radius: 3px; }
+        .foto-img { max-width: 80px; max-height: 60px; }
+        .footer { text-align: center; font-size: 8pt; color: #94a3b8; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="text-center no-print mb-3">
+        <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> Imprimir / Salvar PDF</button>
+        <button class="btn btn-secondary" onclick="window.close()">Fechar</button>
+    </div>
+
+    <div class="header">
+        <h1>Relatório de Auditoria Sanitária</h1>
+        <p>Unidade de Alimentação e Nutrição (UAN)</p>
+    </div>
+
+    <table class="info-table w-100">
+        <tr><td>UAN</td><td>{{ session.uan_nome }}</td></tr>
+        <tr><td>Endereço</td><td>{{ session.uan_endereco or 'N/A' }}</td></tr>
+        <tr><td>Data</td><td>{{ session.data_auditoria }}</td></tr>
+        <tr><td>Auditor</td><td>{{ auditor.nome }}</td></tr>
+        <tr><td>Status</td><td>{{ 'Finalizado' if session.status == 'finalizado' else 'Em andamento' }}</td></tr>
+    </table>
+
+    {% set cls_map = {'Excelente': 'cls-excelente', 'Bom': 'cls-bom', 'Regular': 'cls-regular', 'Critico': 'cls-critico'} %}
+    {% set cls_class = cls_map.get(session.classificacao, 'cls-regular') %}
+    <div class="score-box {{ cls_class }} my-3">
+        <div class="score">{{ "%.1f"|format(session.pontuacao) }}%</div>
+        <div class="fw-bold fs-4">{{ session.classificacao or 'N/A' }}</div>
+    </div>
+
+    {% if red_flags %}
+    <div class="red-flags mb-3">
+        <h3>&#9888; Falhas Graves (Red Flags) Detectadas</h3>
+        <ul>
+            {% for rf in red_flags %}
+            <li><strong>{{ rf.code }}:</strong> {{ rf.label }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% for md in modules %}
+    <div class="module-section card mb-3">
+        <div class="card-header"><h2 class="mb-0">{{ md.module.nome }}</h2></div>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th style="width:60px">Código</th>
+                        <th>Pergunta</th>
+                        <th style="width:100px">Resposta</th>
+                        <th style="width:120px">Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for qd in md.questions %}
+                    {% set q = qd.question %}
+                    {% set r = qd.response %}
+                    <tr class="{% if qd.is_red_flag %}table-danger{% endif %}">
+                        <td>{{ q.codigo }}</td>
+                        <td>{{ q.pergunta }}</td>
+                        <td>
+                            {% if r and r.resposta %}
+                            <span class="{% if qd.is_red_flag %}resp-negative{% else %}resp-positive{% endif %}">{{ r.resposta }}</span>
+                            {% else %}<span style="color:#94a3b8;">—</span>{% endif %}
+                        </td>
+                        <td><small>{{ r.observacao if r and r.observacao else '' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="footer">
+        <p>Relatório gerado em {{ session.created_at.strftime('%d/%m/%Y %H:%M') if session.created_at else 'N/A' }}</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

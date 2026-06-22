@@ -114,11 +114,18 @@ def download_pdf(id):
     try:
         from weasyprint import HTML
         pdf = HTML(string=html).write_pdf()
-    except Exception as e:
-        current_app.logger.error(f'Erro ao gerar PDF: {e}')
-        return jsonify({'error': 'Erro ao gerar PDF. Verifique a instalação do WeasyPrint.'}), 500
-
-    response = make_response(pdf)
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = f'attachment; filename=auditoria_{id}_{datetime.now().strftime("%Y%m%d")}.pdf'
-    return response
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=auditoria_{id}_{datetime.now().strftime("%Y%m%d")}.pdf'
+        return response
+    except Exception:
+        rendered = render_template('pdf/relatorio_print.html',
+                                   session=session,
+                                   modules=modules_data,
+                                   red_flags=red_flags,
+                                   auditor=session.auditor,
+                                   static_folder=static_folder)
+        response = make_response(rendered)
+        response.headers['Content-Type'] = 'text/html; charset=utf-8'
+        response.headers['Content-Disposition'] = f'inline; filename=auditoria_{id}_{datetime.now().strftime("%Y%m%d")}.html'
+        return response
