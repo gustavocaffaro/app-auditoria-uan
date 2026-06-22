@@ -32,15 +32,20 @@
             <span class="badge bg-secondary">Em andamento</span>
             {% endif %}
         </div>
-        <div class="ms-3">
+        <div class="ms-3 d-flex gap-1">
             {% if s.status == 'finalizado' %}
-            <a href="{{ url_for('audit.resultado', id=s.id) }}" class="btn btn-sm btn-outline-primary">
+            <a href="{{ url_for('audit.resultado', id=s.id) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
                 <i class="bi bi-eye"></i>
             </a>
             {% else %}
-            <a href="{{ url_for('audit.questionario', id=s.id) }}" class="btn btn-sm btn-outline-warning">
+            <a href="{{ url_for('audit.questionario', id=s.id) }}" class="btn btn-sm btn-outline-warning py-0 px-1">
                 <i class="bi bi-pencil"></i>
             </a>
+            {% endif %}
+            {% if current_user and current_user.tipo == 'admin' %}
+            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="excluirAuditoria({{ s.id }})">
+                <i class="bi bi-trash"></i>
+            </button>
             {% endif %}
         </div>
     </div>
@@ -53,4 +58,24 @@
     <a href="{{ url_for('audit.nova') }}" class="btn btn-primary">Iniciar Primeira Auditoria</a>
 </div>
 {% endif %}
+{% block scripts %}
+<script>
+async function excluirAuditoria(id) {
+    if (!confirm('Excluir esta auditoria permanentemente? Todas as respostas ser\u00e3o removidas.')) return;
+    try {
+        const resp = await fetch('/admin/auditorias/' + id + '/excluir', { method: 'POST' });
+        const data = await resp.json();
+        if (data.ok) {
+            const btn = document.querySelector('button[onclick*="excluirAuditoria(' + id + ')"]');
+            if (btn) { const item = btn.closest('.list-group-item'); if (item) item.remove(); }
+            mostrarToast('Auditoria exclu\u00edda', 'warning');
+        } else {
+            alert(data.error || 'Erro ao excluir');
+        }
+    } catch (e) {
+        alert('Erro de conex\u00e3o');
+    }
+}
+</script>
+{% endblock %}
 {% endblock %}

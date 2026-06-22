@@ -58,10 +58,15 @@ def nova():
 @jwt_required()
 def questionario(id):
     user_id = int(get_jwt_identity())
-    session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
+    user = User.query.get(user_id)
+    is_admin = user and user.tipo == 'admin'
 
-    if session.status == 'finalizado':
-        return redirect(url_for('audit.resultado', id=id))
+    if is_admin:
+        session = AuditSession.query.get_or_404(id)
+    else:
+        session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
+
+    reeditando = session.status == 'finalizado'
 
     modules = Module.query.order_by(Module.ordem).all()
     all_questions = Question.query.order_by(Question.module_id, Question.ordem).all()
@@ -87,7 +92,8 @@ def questionario(id):
     return render_template('audit/questionario.html',
                            session=session,
                            modules=modules_data,
-                           all_questions_json=_questions_json(all_questions))
+                           all_questions_json=_questions_json(all_questions),
+                           reeditando=reeditando)
 
 
 def _get_extra_responses(session_id, codigo):
@@ -115,10 +121,13 @@ def _questions_json(questions):
 @jwt_required()
 def save(id):
     user_id = int(get_jwt_identity())
-    session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
+    user = User.query.get(user_id)
+    is_admin = user and user.tipo == 'admin'
 
-    if session.status == 'finalizado':
-        return jsonify({'error': 'Auditoria já finalizada'}), 400
+    if is_admin:
+        session = AuditSession.query.get_or_404(id)
+    else:
+        session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
 
     data = request.get_json()
     if not data:
@@ -159,7 +168,11 @@ def save(id):
 @jwt_required()
 def upload_foto(id):
     user_id = int(get_jwt_identity())
-    session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
+    user = User.query.get(user_id)
+    if user and user.tipo == 'admin':
+        session = AuditSession.query.get_or_404(id)
+    else:
+        session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
 
     if 'foto' not in request.files:
         return jsonify({'error': 'Nenhum arquivo enviado'}), 400
@@ -183,7 +196,13 @@ def upload_foto(id):
 @jwt_required()
 def finalizar(id):
     user_id = int(get_jwt_identity())
-    session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
+    user = User.query.get(user_id)
+    is_admin = user and user.tipo == 'admin'
+
+    if is_admin:
+        session = AuditSession.query.get_or_404(id)
+    else:
+        session = AuditSession.query.filter_by(id=id, user_id=user_id).first_or_404()
     session_db = db.session
 
     all_questions = Question.query.order_by(Question.module_id, Question.ordem).all()
@@ -310,6 +329,10 @@ def resultado(id):
 @jwt_required()
 def historico():
     user_id = int(get_jwt_identity())
-    sessions = AuditSession.query.filter_by(user_id=user_id)\
-        .order_by(AuditSession.created_at.desc()).all()
+    user = User.query.get(user_id)
+    if user and user.tipo == 'admin':
+        sessions = AuditSession.query.order_by(AuditSession.created_at.desc()).all()
+    else:
+        sessions = AuditSession.query.filter_by(user_id=user_id)\
+            .order_by(AuditSession.created_at.desc()).all()
     return render_template('audit/historico.html', sessions=sessions)

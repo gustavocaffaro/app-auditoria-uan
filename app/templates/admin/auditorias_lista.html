@@ -53,22 +53,25 @@
                             </span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td nowrap>
                             {% if s.status == 'finalizado' %}
-                            <a href="{{ url_for('admin.auditoria_detalhe', id=s.id) }}" class="btn btn-sm btn-outline-primary">
+                            <a href="{{ url_for('admin.auditoria_detalhe', id=s.id) }}" class="btn btn-sm btn-outline-primary py-0 px-1">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{{ url_for('export.download_csv', id=s.id) }}" class="btn btn-sm btn-outline-success">
+                            <a href="{{ url_for('export.download_csv', id=s.id) }}" class="btn btn-sm btn-outline-success py-0 px-1">
                                 <i class="bi bi-file-earmark-spreadsheet"></i>
                             </a>
-                            <a href="{{ url_for('export.download_pdf', id=s.id) }}" class="btn btn-sm btn-outline-danger">
+                            <a href="{{ url_for('export.download_pdf', id=s.id) }}" class="btn btn-sm btn-outline-danger py-0 px-1">
                                 <i class="bi bi-file-pdf"></i>
                             </a>
                             {% else %}
-                            <a href="{{ url_for('audit.questionario', id=s.id) }}" class="btn btn-sm btn-outline-warning">
+                            <a href="{{ url_for('audit.questionario', id=s.id) }}" class="btn btn-sm btn-outline-warning py-0 px-1">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             {% endif %}
+                            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="excluirAuditoria({{ s.id }})">
+                                <i class="bi bi-trash"></i>
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -77,4 +80,24 @@
         </div>
     </div>
 </div>
+{% block scripts %}
+<script>
+async function excluirAuditoria(id) {
+    if (!confirm('Excluir esta auditoria permanentemente? Todas as respostas vinculadas tamb\u00e9m ser\u00e3o removidas.')) return;
+    try {
+        const resp = await fetch('/admin/auditorias/' + id + '/excluir', { method: 'POST' });
+        const data = await resp.json();
+        if (data.ok) {
+            const btn = document.querySelector('button[onclick*="excluirAuditoria(' + id + ')"]');
+            if (btn) { const row = btn.closest('tr'); if (row) row.remove(); }
+            mostrarToast('Auditoria exclu\u00edda', 'warning');
+        } else {
+            alert(data.error || 'Erro ao excluir');
+        }
+    } catch (e) {
+        alert('Erro de conex\u00e3o');
+    }
+}
+</script>
+{% endblock %}
 {% endblock %}

@@ -204,6 +204,77 @@ def editar_pergunta(id):
     if 'condicao' in data:
         val = data['condicao'].strip()
         q.condicao = val if val else None
+    if 'tipo' in data:
+        q.tipo = data['tipo'].strip()
+    if 'codigo' in data:
+        q.codigo = data['codigo'].strip().upper()
 
     db.session.commit()
     return jsonify({'ok': True, 'question': q.to_dict()})
+
+
+@admin_bp.route('/perguntas/criar', methods=['POST'])
+@admin_required
+def criar_pergunta():
+    data = request.get_json() or request.form
+    module_id = data.get('module_id')
+    codigo = data.get('codigo', '').strip().upper()
+    pergunta = data.get('pergunta', '').strip()
+    tipo = data.get('tipo', 'radio')
+    opcoes = data.get('opcoes', '').strip()
+    peso = int(data.get('peso', 1))
+    ordem = int(data.get('ordem', 1))
+    obrigatoria = data.get('obrigatoria') in (True, 'true', '1')
+    condicao = data.get('condicao', '').strip()
+
+    if not module_id or not codigo or not pergunta:
+        return jsonify({'error': 'Módulo, código e pergunta são obrigatórios'}), 400
+
+    if Question.query.filter_by(codigo=codigo).first():
+        return jsonify({'error': f'Código {codigo} já existe'}), 400
+
+    q = Question(
+        module_id=int(module_id),
+        codigo=codigo,
+        pergunta=pergunta,
+        tipo=tipo,
+        opcoes=opcoes if opcoes else None,
+        peso=peso,
+        ordem=ordem,
+        obrigatoria=obrigatoria,
+        condicao=condicao if condicao else None
+    )
+    db.session.add(q)
+    db.session.commit()
+    return jsonify({'ok': True, 'question': q.to_dict()})
+
+
+@admin_bp.route('/perguntas/<int:id>/excluir', methods=['POST'])
+@admin_required
+def excluir_pergunta(id):
+    q = Question.query.get_or_404(id)
+    data = request.get_json() or request.form
+    force = data.get('force') in (True, 'true', '1')
+
+    resp_count = q.responses.count()
+    if resp_count > 0:
+        if not force:
+            return jsonify({
+                'error': f'Esta pergunta possui {resp_count} resposta(s) vinculada(s) a auditorias. '
+                         f'Use "force=true" para excluir também as respostas.',
+                'has_responses': True,
+                'resp_count': resp_count
+            }), 409
+        Response.query.filter_by(question_id=q.id).delete()
+    db.session.delete(q)
+    db.session.commit()
+    return jsonify({'ok': True, 'deleted_responses': resp_count})
+
+
+@admin_bp.route('/auditorias/<int:id>/excluir', methods=['POST'])
+@admin_required
+def excluir_auditoria(id):
+    session = AuditSession.query.get_or_404(id)
+    db.session.delete(session)
+    db.session.commit()
+    return jsonify({'ok': True})

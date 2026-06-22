@@ -36,7 +36,8 @@ def create_app():
                 current_user = User.query.get(int(user_id))
         except Exception:
             pass
-        return dict(current_user=current_user, now=datetime.now)
+        from app.version import VERSION, VERSION_NAME
+        return dict(current_user=current_user, now=datetime.now, app_version=VERSION, app_version_name=VERSION_NAME)
 
     @app.route('/')
     def index():

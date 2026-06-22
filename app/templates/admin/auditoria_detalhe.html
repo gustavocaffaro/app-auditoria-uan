@@ -11,6 +11,12 @@
         <a href="{{ url_for('export.download_pdf', id=session.id) }}" class="btn btn-sm btn-outline-danger">
             <i class="bi bi-file-pdf"></i> PDF
         </a>
+        <a href="{{ url_for('audit.questionario', id=session.id) }}" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        <button class="btn btn-sm btn-outline-danger" onclick="excluirAuditoria({{ session.id }})">
+            <i class="bi bi-trash"></i> Excluir
+        </button>
     </div>
 </div>
 
@@ -100,4 +106,23 @@
     </div>
 </div>
 {% endfor %}
+{% block scripts %}
+<script>
+async function excluirAuditoria(id) {
+    if (!confirm('Excluir esta auditoria permanentemente? Todas as respostas ser\u00e3o removidas.')) return;
+    try {
+        const resp = await fetch('/admin/auditorias/' + id + '/excluir', { method: 'POST' });
+        const data = await resp.json();
+        if (data.ok) {
+            mostrarToast('Auditoria exclu\u00edda', 'warning');
+            setTimeout(function() { window.location.href = '/admin/auditorias'; }, 1000);
+        } else {
+            alert(data.error || 'Erro ao excluir');
+        }
+    } catch (e) {
+        alert('Erro de conex\u00e3o');
+    }
+}
+</script>
+{% endblock %}
 {% endblock %}

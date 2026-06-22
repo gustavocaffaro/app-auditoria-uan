@@ -2,6 +2,12 @@
 {% block title %}Questionário - {{ session.uan_nome }}{% endblock %}
 
 {% block content %}
+{% if reeditando %}
+<div class="alert alert-warning py-2 mb-3">
+    <i class="bi bi-pencil-square"></i> <strong>Reeditando</strong> — Esta auditoria já foi finalizada. As alterações recalcularão a pontuação.
+</div>
+{% endif %}
+
 <div class="d-flex align-items-center mb-3">
     <div class="flex-grow-1">
         <h5 class="mb-0">{{ session.uan_nome }}</h5>
@@ -142,7 +148,7 @@
 
 <div class="d-grid mb-5">
     <button class="btn btn-success btn-lg" onclick="finalizarAuditoria()">
-        <i class="bi bi-check-lg"></i> Finalizar Auditoria
+        <i class="bi bi-check-lg"></i> {% if reeditando %}Recalcular Pontuação{% else %}Finalizar Auditoria{% endif %}
     </button>
 </div>
 
@@ -157,9 +163,9 @@
             <div class="modal-body">
                 <div id="redFlagsWarning" class="alert alert-danger d-none">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    Existem Red Flags ativas. Descreva as observações antes de finalizar.
+                    Existem Red Flags ativas. Descreva as observações antes de {% if reeditando %}recalcular{% else %}finalizar{% endif %}.
                 </div>
-                <p id="confirmText">Tem certeza que deseja finalizar esta auditoria?</p>
+                <p id="confirmText">{% if reeditando %}Tem certeza que deseja recalcular a pontuação?{% else %}Tem certeza que deseja finalizar esta auditoria?{% endif %}</p>
                 <div id="redFlagsList" class="mb-3"></div>
                 <div class="mb-3">
                     <label class="form-label">Observações finais (obrigatório se houver Red Flags):</label>
@@ -169,7 +175,7 @@
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" onclick="confirmarFinalizar()">
-                    <i class="bi bi-check-lg"></i> Confirmar e Finalizar
+                    <i class="bi bi-check-lg"></i> {% if reeditando %}Confirmar e Recalcular{% else %}Confirmar e Finalizar{% endif %}
                 </button>
             </div>
         </div>

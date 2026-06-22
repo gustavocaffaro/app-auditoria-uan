@@ -4,7 +4,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h5 class="mb-0"><i class="bi bi-question-circle"></i> Gerenciar Perguntas</h5>
-    <span class="badge bg-secondary fs-6">{{ total_perguntas }} perguntas</span>
+    <div>
+        <span class="badge bg-secondary fs-6 me-2">{{ total_perguntas }} perguntas</span>
+        <button class="btn btn-primary" onclick="abrirCriar()"><i class="bi bi-plus-lg"></i> Nova</button>
+    </div>
 </div>
 
 {% for md in modules %}
@@ -18,57 +21,69 @@
             <table class="table table-striped mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:50px">Código</th>
+                        <th style="width:55px">Código</th>
+                        <th style="width:70px">Tipo</th>
                         <th>Pergunta</th>
-                        <th style="width:80px">Tipo</th>
-                        <th style="width:60px">Peso</th>
-                        <th style="width:60px">Ordem</th>
-                        <th style="width:80px">Obrigatória</th>
-                        <th style="width:80px">Ações</th>
+                        <th style="width:50px">Peso</th>
+                        <th style="width:45px">Ordem</th>
+                        <th style="width:55px">Obrig.</th>
+                        <th style="width:40px">Cond.</th>
+                        <th style="width:95px">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for q in md.questions %}
-                    <tr id="q-row-{{ q.id }}">
-                        <td><small>{{ q.codigo }}</small></td>
+                    {% set cond = q.get_condicao() or {} %}
+                    <tr id="q-row-{{ q.id }}" data-condicao='{{ q.condicao or "{}" }}'>
+                        <td><small class="fw-bold">{{ q.codigo }}</small></td>
                         <td>
-                            <div class="pergunta-text" id="ptext-{{ q.id }}">{{ q.pergunta }}</div>
-                            <div class="pergunta-edit d-none" id="pedit-{{ q.id }}">
+                            <span id="qtipo-text-{{ q.id }}">{{ q.tipo }}</span>
+                            <select id="qtipo-{{ q.id }}" class="form-select form-select-sm d-none" style="width:70px">
+                                <option value="radio" {% if q.tipo == 'radio' %}selected{% endif %}>Radio</option>
+                                <option value="select" {% if q.tipo == 'select' %}selected{% endif %}>Select</option>
+                                <option value="date" {% if q.tipo == 'date' %}selected{% endif %}>Date</option>
+                                <option value="foto" {% if q.tipo == 'foto' %}selected{% endif %}>Foto</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div id="ptext-{{ q.id }}" class="small">{{ q.pergunta }}</div>
+                            <div id="pedit-{{ q.id }}" class="d-none">
                                 <textarea class="form-control form-control-sm" rows="2" id="qperg-{{ q.id }}">{{ q.pergunta }}</textarea>
+                                <input type="text" class="form-control form-control-sm mt-1" id="qopcoes-{{ q.id }}"
+                                       placeholder='Opções JSON: ["Sim","Não"]'
+                                       value="{{ q.opcoes or '' }}">
                             </div>
                         </td>
-                        <td><small>{{ q.tipo }}</small></td>
                         <td>
                             <span id="qpeso-text-{{ q.id }}">{{ q.peso }}</span>
-                            <input type="number" class="form-control form-control-sm d-none" style="width:60px"
+                            <input type="number" class="form-control form-control-sm d-none" style="width:45px"
                                    id="qpeso-{{ q.id }}" value="{{ q.peso }}" min="0" max="5">
                         </td>
                         <td>
                             <span id="qordem-text-{{ q.id }}">{{ q.ordem }}</span>
-                            <input type="number" class="form-control form-control-sm d-none" style="width:60px"
+                            <input type="number" class="form-control form-control-sm d-none" style="width:45px"
                                    id="qordem-{{ q.id }}" value="{{ q.ordem }}" min="1">
                         </td>
                         <td>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox"
-                                       id="qobrig-{{ q.id }}" data-qid="{{ q.id }}"
-                                       {% if q.obrigatoria %}checked{% endif %}
+                                       id="qobrig-{{ q.id }}" {% if q.obrigatoria %}checked{% endif %}
                                        onchange="toggleObrigatoria({{ q.id }})">
                             </div>
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" id="edit-btn-{{ q.id }}"
-                                    onclick="editarPergunta({{ q.id }})">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-success d-none" id="save-btn-{{ q.id }}"
-                                    onclick="salvarPergunta({{ q.id }})">
-                                <i class="bi bi-check-lg"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary d-none" id="cancel-btn-{{ q.id }}"
-                                    onclick="cancelarEdicao({{ q.id }})">
-                                <i class="bi bi-x-lg"></i>
-                            </button>
+                            {% if cond.get('depends') or cond.get('extra') or cond.get('red_flag') %}
+                            <span class="badge bg-warning text-dark" style="font-size:9px">SIM</span>
+                            {% else %}
+                            <span class="badge bg-secondary" style="font-size:9px">—</span>
+                            {% endif %}
+                        </td>
+                        <td nowrap>
+                            <button class="btn btn-sm btn-outline-info py-0 px-1" onclick="editarPergunta({{ q.id }})" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-warning py-0 px-1" onclick="editarCondicao({{ q.id }})" title="Condicional"><i class="bi bi-diagram-3"></i></button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="excluirPergunta({{ q.id }})" title="Excluir"><i class="bi bi-trash"></i></button>
+                            <button class="btn btn-sm btn-outline-success d-none py-0 px-1" id="save-btn-{{ q.id }}" onclick="salvarPergunta({{ q.id }})" title="Salvar"><i class="bi bi-check-lg"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary d-none py-0 px-1" id="cancel-btn-{{ q.id }}" onclick="cancelarEdicao({{ q.id }})" title="Cancelar"><i class="bi bi-x-lg"></i></button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -78,48 +93,309 @@
     </div>
 </div>
 {% endfor %}
+
+<!-- Modal Criar Pergunta -->
+<div class="modal fade" id="criarModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Nova Pergunta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="criarForm" onsubmit="return criarPergunta(event)">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Módulo</label>
+                            <select id="criarModule" class="form-select" required>
+                                {% for md in modules %}
+                                <option value="{{ md.module.id }}">{{ md.module.nome[:30] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Código</label>
+                            <input type="text" id="criarCodigo" class="form-control" required placeholder="M7Q1">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tipo</label>
+                            <select id="criarTipo" class="form-select" required
+                                    onchange="document.getElementById('criarOpcoesDiv').style.display=this.value==='radio'||this.value==='select'?'':'none'">
+                                <option value="radio">Radio</option>
+                                <option value="select">Select</option>
+                                <option value="date">Date</option>
+                                <option value="foto">Foto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Peso</label>
+                            <input type="number" id="criarPeso" class="form-control" value="3" min="0" max="5">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Ordem</label>
+                            <input type="number" id="criarOrdem" class="form-control" value="1" min="1">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Pergunta</label>
+                        <textarea id="criarPergunta" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mt-3" id="criarOpcoesDiv">
+                        <label class="form-label">Opções <small class="text-muted">(array JSON)</small></label>
+                        <input type="text" id="criarOpcoes" class="form-control" placeholder='["Sim","Não"]' value='["Sim","Não"]'>
+                    </div>
+                    <div class="mt-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="criarObrigatoria" checked>
+                            <label class="form-check-label">Obrigatória</label>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Condicional</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Mostrar apenas se resposta de</label>
+                            <select id="criarDepends" class="form-select">
+                                <option value="">— Sem condicional —</option>
+                                {% for md in modules %}
+                                <optgroup label="{{ md.module.nome[:25] }}">
+                                    {% for q in md.questions %}
+                                    <option value="{{ q.codigo }}">{{ q.codigo }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">for igual a</label>
+                            <input type="text" id="criarDependsValue" class="form-control" placeholder="Sim">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Campos extras</label>
+                            <button class="btn btn-outline-secondary w-100" type="button" onclick="addExtraRow('criar')">+ Adicionar</button>
+                        </div>
+                    </div>
+                    <div id="criarExtraList" class="mt-2"></div>
+                    <div class="mt-3 border rounded p-3">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="criarIsRedFlag"
+                                   onchange="document.getElementById('criarRedFlagConfig').classList.toggle('d-none', !this.checked)">
+                            <label class="form-check-label fw-bold text-danger">É Red Flag?</label>
+                        </div>
+                        <div id="criarRedFlagConfig" class="d-none row g-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Código RF</label>
+                                <input type="text" id="criarRfCode" class="form-control" placeholder="RF8">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Label</label>
+                                <input type="text" id="criarRfLabel" class="form-control" placeholder="Descrição">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Disparar</label>
+                                <input type="text" id="criarRfTrigger" class="form-control" placeholder="Sim">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Pergunta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Condição -->
+<div class="modal fade" id="condModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="condModalTitle">Editar Condicional</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="condForm" onsubmit="return salvarCondicao(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="condQuestionId">
+
+                    <h6 class="mb-2">1. Mostrar apenas se</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <select id="condDepends" class="form-select">
+                                <option value="">— Sempre visível —</option>
+                                {% for md in modules %}
+                                <optgroup label="{{ md.module.nome[:25] }}">
+                                    {% for q in md.questions %}
+                                    <option value="{{ q.codigo }}">{{ q.codigo }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="condDependsValue" class="form-control" placeholder="Valor (ex: Sim)">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger btn-sm" type="button" onclick="limparDepends()">Limpar</button>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-2">2. Campos extras quando resposta for</h6>
+                    <div class="input-group mb-2">
+                        <input type="text" id="condExtraTrigger" class="form-control" placeholder="Ex: Outro">
+                        <button class="btn btn-outline-secondary" type="button" onclick="addExtraRow('cond')">+ Campo</button>
+                    </div>
+                    <div id="condExtraList" class="mb-3"></div>
+
+                    <h6 class="mb-2">3. Red Flag</h6>
+                    <div class="border rounded p-3">
+                        <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="condIsRedFlag"
+                                   onchange="document.getElementById('condRedFlagConfig').classList.toggle('d-none', !this.checked)">
+                            <label class="form-check-label fw-bold text-danger">Ativar Red Flag</label>
+                        </div>
+                        <div id="condRedFlagConfig" class="d-none row g-2">
+                            <div class="col-md-3">
+                                <label class="form-label">Código</label>
+                                <input type="text" id="condRfCode" class="form-control" placeholder="RF8">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Label</label>
+                                <input type="text" id="condRfLabel" class="form-control" placeholder="Descrição">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Disparar quando</label>
+                                <input type="text" id="condRfTrigger" class="form-control" placeholder="Sim">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Condicional</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+function abrirCriar() {
+    document.getElementById('criarForm').reset();
+    document.getElementById('criarObrigatoria').checked = true;
+    document.getElementById('criarOpcoes').value = '["Sim","Não"]';
+    document.getElementById('criarOpcoesDiv').style.display = '';
+    document.getElementById('criarExtraList').innerHTML = '';
+    document.getElementById('criarRedFlagConfig').classList.add('d-none');
+    document.getElementById('criarIsRedFlag').checked = false;
+    new bootstrap.Modal(document.getElementById('criarModal')).show();
+}
+
+async function criarPergunta(e) {
+    e.preventDefault();
+    const cond = {};
+
+    const depQ = document.getElementById('criarDepends').value;
+    if (depQ) {
+        cond.depends = {question: depQ, value: document.getElementById('criarDependsValue').value || 'Sim'};
+    }
+
+    const extraFields = coletaExtraFields('criar');
+    const extraTrigger = document.getElementById('criarExtraTrigger')?.value;
+    if (extraTrigger && extraFields.length > 0) {
+        cond.extra = {trigger: extraTrigger, fields: extraFields};
+    }
+
+    if (document.getElementById('criarIsRedFlag').checked) {
+        cond.red_flag = {
+            code: document.getElementById('criarRfCode').value || 'RF0',
+            label: document.getElementById('criarRfLabel').value || '',
+            trigger: document.getElementById('criarRfTrigger').value || 'Sim',
+            require_observacao: true
+        };
+    }
+
+    const data = {
+        module_id: document.getElementById('criarModule').value,
+        codigo: document.getElementById('criarCodigo').value.trim().toUpperCase(),
+        pergunta: document.getElementById('criarPergunta').value.trim(),
+        tipo: document.getElementById('criarTipo').value,
+        opcoes: document.getElementById('criarOpcoes')?.value?.trim() || '',
+        peso: parseInt(document.getElementById('criarPeso').value) || 1,
+        ordem: parseInt(document.getElementById('criarOrdem').value) || 1,
+        obrigatoria: document.getElementById('criarObrigatoria').checked,
+        condicao: Object.keys(cond).length > 0 ? JSON.stringify(cond) : ''
+    };
+
+    try {
+        const resp = await fetch('/admin/perguntas/criar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await resp.json();
+        if (resp.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('criarModal')).hide();
+            mostrarToast('Pergunta criada!', 'success');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            alert('Erro: ' + (result.error || 'desconhecido'));
+        }
+    } catch (e) {
+        alert('Erro de conexão: ' + e.message);
+    }
+    return false;
+}
+
 let editando = null;
 
 function editarPergunta(id) {
     if (editando) cancelarEdicao(editando);
     editando = id;
-    document.getElementById('ptext-' + id).classList.add('d-none');
-    document.getElementById('pedit-' + id).classList.remove('d-none');
-    document.getElementById('qpeso-text-' + id).classList.add('d-none');
-    document.getElementById('qpeso-' + id).classList.remove('d-none');
-    document.getElementById('qordem-text-' + id).classList.add('d-none');
-    document.getElementById('qordem-' + id).classList.remove('d-none');
-    document.getElementById('edit-btn-' + id).classList.add('d-none');
+    ['ptext','qpeso-text','qordem-text','qtipo-text'].forEach(cls => {
+        const el = document.getElementById(cls + '-' + id);
+        if (el) el.style.display = 'none';
+    });
+    ['pedit','qpeso','qordem','qtipo'].forEach(cls => {
+        const el = document.getElementById(cls + '-' + id);
+        if (el) { el.classList.remove('d-none'); el.style.display = ''; }
+    });
+    const row = document.getElementById('q-row-' + id);
+    row.querySelectorAll('.btn-outline-info,.btn-outline-warning,.btn-outline-danger').forEach(b => b.classList.add('d-none'));
     document.getElementById('save-btn-' + id).classList.remove('d-none');
     document.getElementById('cancel-btn-' + id).classList.remove('d-none');
 }
 
 function cancelarEdicao(id) {
     editando = null;
-    document.getElementById('ptext-' + id).classList.remove('d-none');
-    document.getElementById('pedit-' + id).classList.add('d-none');
-    document.getElementById('qpeso-text-' + id).classList.remove('d-none');
-    document.getElementById('qpeso-' + id).classList.add('d-none');
-    document.getElementById('qordem-text-' + id).classList.remove('d-none');
-    document.getElementById('qordem-' + id).classList.add('d-none');
-    document.getElementById('edit-btn-' + id).classList.remove('d-none');
+    ['ptext','qpeso-text','qordem-text','qtipo-text'].forEach(cls => {
+        const el = document.getElementById(cls + '-' + id);
+        if (el) el.style.display = '';
+    });
+    ['pedit','qpeso','qordem','qtipo'].forEach(cls => {
+        const el = document.getElementById(cls + '-' + id);
+        if (el) { el.classList.add('d-none'); }
+    });
+    const row = document.getElementById('q-row-' + id);
+    row.querySelectorAll('.btn-outline-info,.btn-outline-warning,.btn-outline-danger').forEach(b => b.classList.remove('d-none'));
     document.getElementById('save-btn-' + id).classList.add('d-none');
     document.getElementById('cancel-btn-' + id).classList.add('d-none');
 }
 
 async function salvarPergunta(id) {
     const data = {
-        pergunta: document.getElementById('qperg-' + id).value,
-        peso: parseInt(document.getElementById('qpeso-' + id).value),
-        ordem: parseInt(document.getElementById('qordem-' + id).value)
+        pergunta: document.getElementById('qperg-' + id).value.trim(),
+        peso: parseInt(document.getElementById('qpeso-' + id).value) || 0,
+        ordem: parseInt(document.getElementById('qordem-' + id).value) || 1,
+        tipo: document.getElementById('qtipo-' + id).value,
+        opcoes: document.getElementById('qopcoes-' + id)?.value?.trim() || ''
     };
 
     try {
-        const resp = await fetch(`/admin/perguntas/${id}/editar`, {
+        const resp = await fetch('/admin/perguntas/' + id + '/editar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data)
@@ -129,30 +405,205 @@ async function salvarPergunta(id) {
             document.getElementById('ptext-' + id).textContent = data.pergunta;
             document.getElementById('qpeso-text-' + id).textContent = data.peso;
             document.getElementById('qordem-text-' + id).textContent = data.ordem;
+            document.getElementById('qtipo-text-' + id).textContent = data.tipo;
             cancelarEdicao(id);
             mostrarToast('Pergunta salva!', 'success');
         } else {
-            alert(result.error || 'Erro ao salvar');
+            alert('Erro: ' + (result.error || 'desconhecido'));
         }
     } catch (e) {
-        alert('Erro de conexão');
+        alert('Erro de conexão: ' + e.message);
     }
 }
 
 async function toggleObrigatoria(id) {
     const checked = document.getElementById('qobrig-' + id).checked;
     try {
-        const resp = await fetch(`/admin/perguntas/${id}/editar`, {
+        const resp = await fetch('/admin/perguntas/' + id + '/editar', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({obrigatoria: checked})
         });
-        if (resp.ok) {
-            mostrarToast(checked ? 'Marcada como obrigatória' : 'Marcada como opcional', 'info');
-        }
+        if (resp.ok) mostrarToast(checked ? 'Obrigatória' : 'Opcional', 'info');
     } catch (e) {
         document.getElementById('qobrig-' + id).checked = !checked;
+        mostrarToast('Erro ao salvar', 'danger');
     }
+}
+
+function excluirPergunta(id) {
+    if (!confirm('Excluir esta pergunta permanentemente?')) return;
+
+    fetch('/admin/perguntas/' + id + '/excluir', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: '{}'})
+        .then(r => r.json().then(d => ({status: r.status, data: d})))
+        .then(({status, data}) => {
+            if (status === 409 && data.has_responses) {
+                const msg = 'Esta pergunta tem ' + data.resp_count + ' resposta(s) vinculada(s) a auditorias.\n\n' +
+                           'Excluir a pergunta REMOVERÁ TAMBÉM todas as respostas vinculadas.\n\n' +
+                           'Tem certeza que deseja continuar?';
+                if (confirm(msg)) {
+                    return fetch('/admin/perguntas/' + id + '/excluir', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({force: true})
+                    }).then(r => r.json());
+                }
+                return null;
+            }
+            if (status === 200 && data.ok) return data;
+            throw new Error(data.error || 'Erro ao excluir');
+        })
+        .then(d => {
+            if (!d) return;
+            if (d.ok) {
+                const row = document.getElementById('q-row-' + id);
+                if (row) row.remove();
+                const msg = d.deleted_responses
+                    ? 'Pergunta excluída! (' + d.deleted_responses + ' resposta(s) removidas)'
+                    : 'Pergunta excluída!';
+                mostrarToast(msg, 'warning');
+            }
+        })
+        .catch(e => alert(e.message));
+}
+
+// --- Condicional Modal ---
+
+function editarCondicao(id) {
+    const row = document.getElementById('q-row-' + id);
+    document.getElementById('condQuestionId').value = id;
+    document.getElementById('condModalTitle').textContent = 'Condicional';
+
+    // Reset
+    document.getElementById('condDepends').value = '';
+    document.getElementById('condDependsValue').value = '';
+    document.getElementById('condExtraList').innerHTML = '';
+    document.getElementById('condExtraTrigger').value = '';
+    document.getElementById('condIsRedFlag').checked = false;
+    document.getElementById('condRedFlagConfig').classList.add('d-none');
+    document.getElementById('condRfCode').value = '';
+    document.getElementById('condRfLabel').value = '';
+    document.getElementById('condRfTrigger').value = '';
+
+    try {
+        const condStr = row ? row.getAttribute('data-condicao') : null;
+        if (condStr && condStr !== '{}') {
+            const cond = JSON.parse(condStr);
+            if (cond.depends) {
+                document.getElementById('condDepends').value = cond.depends.question || '';
+                document.getElementById('condDependsValue').value = cond.depends.value || '';
+            }
+            if (cond.extra) {
+                document.getElementById('condExtraTrigger').value = cond.extra.trigger || '';
+                (cond.extra.fields || []).forEach(function(f) { addExtraRow('cond', f); });
+            }
+            if (cond.red_flag) {
+                document.getElementById('condIsRedFlag').checked = true;
+                document.getElementById('condRedFlagConfig').classList.remove('d-none');
+                document.getElementById('condRfCode').value = cond.red_flag.code || '';
+                document.getElementById('condRfLabel').value = cond.red_flag.label || '';
+                document.getElementById('condRfTrigger').value = cond.red_flag.trigger || '';
+            }
+        }
+    } catch (e) {
+        console.warn('Erro ao carregar condicional', e);
+    }
+
+    new bootstrap.Modal(document.getElementById('condModal')).show();
+}
+
+async function salvarCondicao(e) {
+    e.preventDefault();
+    const id = document.getElementById('condQuestionId').value;
+    const cond = {};
+
+    const depQ = document.getElementById('condDepends').value;
+    if (depQ) {
+        cond.depends = {
+            question: depQ,
+            value: document.getElementById('condDependsValue').value || 'Sim'
+        };
+    }
+
+    const extraFields = coletaExtraFields('cond');
+    const extraTrigger = document.getElementById('condExtraTrigger').value;
+    if (extraTrigger && extraFields.length > 0) {
+        cond.extra = {trigger: extraTrigger, fields: extraFields};
+    }
+
+    if (document.getElementById('condIsRedFlag').checked) {
+        cond.red_flag = {
+            code: document.getElementById('condRfCode').value || 'RF0',
+            label: document.getElementById('condRfLabel').value || '',
+            trigger: document.getElementById('condRfTrigger').value || 'Sim',
+            require_observacao: true
+        };
+    }
+
+    try {
+        const resp = await fetch('/admin/perguntas/' + id + '/editar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                condicao: Object.keys(cond).length > 0 ? JSON.stringify(cond) : ''
+            })
+        });
+        if (resp.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('condModal')).hide();
+            mostrarToast('Condicional salva!', 'success');
+            setTimeout(function() { location.reload(); }, 300);
+        } else {
+            const r = await resp.json();
+            alert('Erro: ' + (r.error || 'desconhecido'));
+        }
+    } catch (e) {
+        alert('Erro de conexão: ' + e.message);
+    }
+    return false;
+}
+
+function limparDepends() {
+    document.getElementById('condDepends').value = '';
+    document.getElementById('condDependsValue').value = '';
+}
+
+// --- Extra Fields ---
+
+function addExtraRow(prefix, field) {
+    field = field || {type: 'observacao', required: false};
+    const list = document.getElementById(prefix + 'ExtraList');
+    const idx = list.children.length;
+    const div = document.createElement('div');
+    div.className = 'input-group mb-1 extra-row';
+    div.innerHTML =
+        '<select class="form-select" style="max-width:130px">' +
+            '<option value="observacao"' + (field.type === 'observacao' ? ' selected' : '') + '>Observação</option>' +
+            '<option value="foto"' + (field.type === 'foto' ? ' selected' : '') + '>Foto</option>' +
+            '<option value="date"' + (field.type === 'date' ? ' selected' : '') + '>Data</option>' +
+        '</select>' +
+        '<div class="input-group-text bg-white">' +
+            '<div class="form-check form-switch mb-0">' +
+                '<input class="form-check-input" type="checkbox"' + (field.required ? ' checked' : '') + '>' +
+                '<label class="form-check-label small ms-1">Obrig.</label>' +
+            '</div>' +
+        '</div>' +
+        '<button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()"><i class="bi bi-x"></i></button>';
+    list.appendChild(div);
+}
+
+function coletaExtraFields(prefix) {
+    const list = document.getElementById(prefix + 'ExtraList');
+    if (!list) return [];
+    const fields = [];
+    list.querySelectorAll('.extra-row').forEach(function(row) {
+        const sel = row.querySelector('select');
+        const chk = row.querySelector('input[type="checkbox"]');
+        fields.push({
+            type: sel ? sel.value : 'observacao',
+            required: chk ? chk.checked : false
+        });
+    });
+    return fields;
 }
 </script>
 {% endblock %}
