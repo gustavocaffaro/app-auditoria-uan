@@ -42,30 +42,32 @@
             </div>
             <div class="card-body">
                 {% for qd in md.questions %}
-                {% set q = qd.question %}
-                {% set cond = q.get_condicao() %}
-                <div class="question-card mb-4 p-3 rounded border"
-                     id="q-{{ q.id }}"
-                     data-question-id="{{ q.id }}"
-                     data-codigo="{{ q.codigo }}"
-                     data-module="{{ q.module_id }}"
-                     data-peso="{{ q.peso }}"
-                     data-condicao='{{ q.condicao or "{}" }}'
-                     {% if cond and cond.get('depends') %}
-                     data-depends="{{ cond.depends.question }}"
-                     data-depends-value="{{ cond.depends.value }}"
-                     style="display:none;"
-                     {% endif %}>
+{% set q = qd.question %}
+{% set cond = q.get_condicao() %}
+<div class="question-card mb-4 p-3 rounded border"
+     id="q-{{ q.id }}"
+     data-question-id="{{ q.id }}"
+     data-codigo="{{ q.codigo }}"
+     data-module="{{ q.module_id }}"
+     data-peso="{{ q.peso }}"
+     data-obrigatoria="{{ 'true' if q.obrigatoria else 'false' }}"
+     data-condicao='{{ q.condicao or "{}" }}'
+     {% if cond and cond.get('depends') %}
+     data-depends="{{ cond.depends.question }}"
+     data-depends-value="{{ cond.depends.value }}"
+     style="display:none;"
+     {% endif %}>
 
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <label class="fw-semibold question-label flex-grow-1">
-                            <span class="badge bg-secondary me-1">{{ q.codigo }}</span>
-                            {{ q.pergunta }}
-                        </label>
-                        {% if q.peso > 0 %}
-                        <span class="badge bg-info ms-2 flex-shrink-0">Peso {{ q.peso }}</span>
-                        {% endif %}
-                    </div>
+    <div class="d-flex justify-content-between align-items-start mb-2">
+        <label class="fw-semibold question-label flex-grow-1">
+            <span class="badge bg-secondary me-1">{{ q.codigo }}</span>
+            {{ q.pergunta }}
+            {% if q.obrigatoria %}<span class="text-danger ms-1">*</span>{% endif %}
+        </label>
+        {% if q.peso > 0 %}
+        <span class="badge bg-info ms-2 flex-shrink-0">Peso {{ q.peso }}</span>
+        {% endif %}
+    </div>
 
                     {% if q.tipo == 'radio' and q.get_opcoes() %}
                     <div class="radio-group">

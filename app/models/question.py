@@ -13,6 +13,7 @@ class Question(db.Model):
     opcoes = db.Column(db.Text)
     peso = db.Column(db.Integer, nullable=False, default=1)
     ordem = db.Column(db.Integer, nullable=False)
+    obrigatoria = db.Column(db.Boolean, default=False)
     condicao = db.Column(db.Text)
 
     responses = db.relationship('Response', backref='question', lazy='dynamic')
@@ -37,5 +38,6 @@ class Question(db.Model):
             'opcoes': self.get_opcoes(),
             'peso': self.peso,
             'ordem': self.ordem,
+            'obrigatoria': self.obrigatoria,
             'condicao': self.get_condicao()
         }

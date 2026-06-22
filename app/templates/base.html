@@ -23,7 +23,17 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('audit.nova') }}"><i class="bi bi-plus-circle"></i> Nova</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('audit.historico') }}"><i class="bi bi-clock-history"></i> Histórico</a></li>
                     {% if current_user and current_user.tipo == 'admin' %}
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Admin</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.usuarios') }}"><i class="bi bi-people"></i> Usuários</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.perguntas') }}"><i class="bi bi-question-circle"></i> Perguntas</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.auditorias') }}"><i class="bi bi-list-check"></i> Auditorias</a></li>
+                        </ul>
+                    </li>
                     {% endif %}
                     <li class="nav-item"><a class="nav-link" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
                 </ul>

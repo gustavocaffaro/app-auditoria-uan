@@ -103,11 +103,13 @@ def download_pdf(id):
 
     modules_data, red_flags = _get_session_data(session)
 
+    static_folder = os.path.join(current_app.root_path, 'static')
     html = render_template('pdf/relatorio.html',
                            session=session,
                            modules=modules_data,
                            red_flags=red_flags,
-                           auditor=session.auditor)
+                           auditor=session.auditor,
+                           static_folder=static_folder)
 
     try:
         from weasyprint import HTML

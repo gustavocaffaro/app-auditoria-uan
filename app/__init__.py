@@ -171,6 +171,17 @@ def seed_database():
 
     for p in perguntas:
         mod = modules[p['module_ordem']]
+        cond = p.get('condicao')
+        depends = False
+        if cond:
+            try:
+                import json as _json
+                c = _json.loads(cond)
+                if 'depends' in c:
+                    depends = True
+            except Exception:
+                pass
+
         q = Question(
             module_id=mod.id,
             codigo=p['codigo'],
@@ -179,7 +190,8 @@ def seed_database():
             opcoes=p.get('opcoes'),
             peso=p['peso'],
             ordem=p['ordem'],
-            condicao=p.get('condicao')
+            obrigatoria=(p['peso'] > 0 and not depends),
+            condicao=cond
         )
         db.session.add(q)
 

@@ -163,3 +163,47 @@ def auditoria_detalhe(id):
                            modules=modules_data,
                            red_flags=red_flags_ativas,
                            auditor=session.auditor)
+
+
+@admin_bp.route('/perguntas')
+@admin_required
+def perguntas():
+    modules = Module.query.order_by(Module.ordem).all()
+    all_questions = Question.query.order_by(Question.module_id, Question.ordem).all()
+    modules_data = []
+    total = 0
+    for mod in modules:
+        qs = [q for q in all_questions if q.module_id == mod.id]
+        total += len(qs)
+        modules_data.append({'module': mod, 'questions': qs})
+    return render_template('admin/perguntas.html', modules=modules_data, total_perguntas=total)
+
+
+@admin_bp.route('/perguntas/<int:id>/editar', methods=['POST'])
+@admin_required
+def editar_pergunta(id):
+    q = Question.query.get_or_404(id)
+    data = request.get_json() or request.form
+
+    if 'pergunta' in data:
+        q.pergunta = data['pergunta'].strip()
+    if 'peso' in data:
+        try:
+            q.peso = int(data['peso'])
+        except (ValueError, TypeError):
+            pass
+    if 'ordem' in data:
+        try:
+            q.ordem = int(data['ordem'])
+        except (ValueError, TypeError):
+            pass
+    if 'obrigatoria' in data:
+        q.obrigatoria = data['obrigatoria'] in (True, 'true', '1')
+    if 'opcoes' in data:
+        q.opcoes = data['opcoes'].strip()
+    if 'condicao' in data:
+        val = data['condicao'].strip()
+        q.condicao = val if val else None
+
+    db.session.commit()
+    return jsonify({'ok': True, 'question': q.to_dict()})

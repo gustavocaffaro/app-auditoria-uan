@@ -59,10 +59,10 @@
             display: inline-block;
             margin-top: 5px;
         }
-        .success { background: #059669; color: white; }
-        .primary { background: #1a56db; color: white; }
-        .warning { background: #d97706; color: white; }
-        .danger { background: #dc2626; color: white; }
+        .cls-excelente { background: #059669; color: white; }
+        .cls-bom { background: #1a56db; color: white; }
+        .cls-regular { background: #d97706; color: white; }
+        .cls-critico { background: #dc2626; color: white; }
 
         .red-flags {
             background: #fef2f2;
@@ -153,13 +153,13 @@
         <tr><td>Status</td><td>{{ 'Finalizado' if session.status == 'finalizado' else 'Em andamento' }}</td></tr>
     </table>
 
-    <div class="score-box {{ session.classificacao|lower }}">
+    {% set cls_map = {'Excelente': 'cls-excelente', 'Bom': 'cls-bom', 'Regular': 'cls-regular', 'Critico': 'cls-critico'} %}
+    {% set cls_class = cls_map.get(session.classificacao, 'cls-regular') %}
+
+    <div class="score-box {{ cls_class }}">
         <div class="score">{{ "%.1f"|format(session.pontuacao) }}%</div>
-        <div class="classificacao {% if session.classificacao == 'Excelente' %}success
-            {% elif session.classificacao == 'Bom' %}primary
-            {% elif session.classificacao == 'Regular' %}warning
-            {% else %}danger{% endif %}">
-            {{ session.classificacao }}
+        <div class="classificacao {{ cls_class }}">
+            {{ session.classificacao or 'N/A' }}
         </div>
     </div>
 
@@ -206,7 +206,7 @@
                     <td><small>{{ r.observacao if r and r.observacao else '' }}</small></td>
                     <td>
                         {% if r and r.foto_path %}
-                        <img src="file:///{{ url_for('static', filename=r.foto_path) }}" class="foto-img">
+                        <img src="file:///{{ static_folder }}/{{ r.foto_path.replace('uploads/', '') }}" class="foto-img">
                         {% endif %}
                     </td>
                 </tr>
