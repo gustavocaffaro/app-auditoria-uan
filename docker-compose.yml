@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  uan-auditoria:
+    build: .
+    container_name: uan-auditoria
+    restart: unless-stopped
+    ports:
+      - "8090:5000"
+    volumes:
+      - ./data:/app/data
+      - ./app/static/uploads:/app/static/uploads
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=change-this-in-production
+      - DATABASE_URL=sqlite:///data/uan.db

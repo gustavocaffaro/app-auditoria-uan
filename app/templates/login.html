@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Auditoria UAN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="login-bg">
+    <div class="container min-vh-100 d-flex align-items-center justify-content-center">
+        <div class="card login-card shadow-lg">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-clipboard-check text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="mt-2">Auditoria UAN</h3>
+                    <p class="text-muted small">Sistema de Auditoria Sanitária</p>
+                </div>
+
+                {% if erro %}
+                <div class="alert alert-danger py-2">{{ erro }}</div>
+                {% endif %}
+
+                <form id="loginForm" onsubmit="return doLogin(event)">
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control form-control-lg" required
+                               placeholder="seu@email.com" autocomplete="email">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Senha</label>
+                        <input type="password" name="senha" class="form-control form-control-lg" required
+                               placeholder="Sua senha" autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-box-arrow-in-right"></i> Entrar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    async function doLogin(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = { email: form.email.value, senha: form.senha.value };
+
+        try {
+            const resp = await fetch('{{ url_for("auth.login") }}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await resp.json();
+            if (resp.ok) {
+                window.location.href = result.redirect;
+            } else {
+                alert(result.error || 'Erro ao fazer login');
+            }
+        } catch (err) {
+            alert('Erro de conexão');
+        }
+        return false;
+    }
+    </script>
+</body>
+</html>

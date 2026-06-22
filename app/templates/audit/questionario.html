@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Questionário - {{ session.uan_nome }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+    <div class="flex-grow-1">
+        <h5 class="mb-0">{{ session.uan_nome }}</h5>
+        <small class="text-muted">{{ session.data_auditoria }}</small>
+    </div>
+    <div class="text-end">
+        <span id="saveIndicator" class="badge bg-success d-none">Salvo ✓</span>
+        <span id="progressText" class="badge bg-secondary ms-1">0%</span>
+    </div>
+</div>
+
+<div class="progress mb-3" style="height: 6px;">
+    <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+</div>
+
+<ul class="nav nav-pills nav-fill mb-3 flex-nowrap overflow-auto" id="moduleTabs" style="gap: 4px;">
+    {% for md in modules %}
+    <li class="nav-item flex-shrink-0">
+        <button class="nav-link {% if loop.first %}active{% endif %} module-tab"
+                data-bs-toggle="tab" data-bs-target="#mod{{ md.module.id }}"
+                type="button">
+            {{ md.module.nome.split('(')[0]|truncate(20, True, '..') }}
+            <span class="badge bg-light text-dark ms-1 q-count"
+                  data-module="{{ md.module.id }}">0/{{ md.questions|length }}</span>
+        </button>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="tab-content" id="moduleContent">
+    {% for md in modules %}
+    <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+         id="mod{{ md.module.id }}" role="tabpanel">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">{{ md.module.nome }}</h6>
+                <small class="text-muted">{{ md.module.descricao }}</small>
+            </div>
+            <div class="card-body">
+                {% for qd in md.questions %}
+                {% set q = qd.question %}
+                {% set cond = q.get_condicao() %}
+                <div class="question-card mb-4 p-3 rounded border"
+                     id="q-{{ q.id }}"
+                     data-question-id="{{ q.id }}"
+                     data-codigo="{{ q.codigo }}"
+                     data-module="{{ q.module_id }}"
+                     data-peso="{{ q.peso }}"
+                     data-condicao='{{ q.condicao or "{}" }}'
+                     {% if cond and cond.get('depends') %}
+                     data-depends="{{ cond.depends.question }}"
+                     data-depends-value="{{ cond.depends.value }}"
+                     style="display:none;"
+                     {% endif %}>
+
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <label class="fw-semibold question-label flex-grow-1">
+                            <span class="badge bg-secondary me-1">{{ q.codigo }}</span>
+                            {{ q.pergunta }}
+                        </label>
+                        {% if q.peso > 0 %}
+                        <span class="badge bg-info ms-2 flex-shrink-0">Peso {{ q.peso }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if q.tipo == 'radio' and q.get_opcoes() %}
+                    <div class="radio-group">
+                        {% for opt in q.get_opcoes() %}
+                        <div class="form-check mb-1">
+                            <input class="form-check-input question-input" type="radio"
+                                   name="resp_{{ q.id }}" value="{{ opt }}"
+                                   id="r_{{ q.id }}_{{ loop.index }}"
+                                   data-codigo="{{ q.codigo }}"
+                                   {% if qd.resposta == opt %}checked{% endif %}>
+                            <label class="form-check-label" for="r_{{ q.id }}_{{ loop.index }}">
+                                {{ opt }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% elif q.tipo == 'select' and q.get_opcoes() %}
+                    <select class="form-select form-select-lg question-input" name="resp_{{ q.id }}"
+                            data-codigo="{{ q.codigo }}">
+                        <option value="">-- Selecione --</option>
+                        {% for opt in q.get_opcoes() %}
+                        <option value="{{ opt }}" {% if qd.resposta == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+
+                    {% elif q.tipo == 'date' %}
+                    <input type="date" class="form-control form-control-lg question-input"
+                           name="resp_{{ q.id }}" data-codigo="{{ q.codigo }}"
+                           value="{{ qd.resposta or '' }}">
+
+                    {% elif q.tipo == 'foto' %}
+                    <div class="foto-upload">
+                        <input type="file" accept="image/*" capture="environment"
+                               class="form-control form-control-lg foto-input"
+                               data-codigo="{{ q.codigo }}" data-question-id="{{ q.id }}">
+                        {% if qd.foto_path %}
+                        <div class="mt-2">
+                            <img src="{{ url_for('static', filename=qd.foto_path) }}"
+                                 class="img-thumbnail" style="max-height: 150px;">
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="extra-fields mt-2" id="extra_{{ q.codigo }}"></div>
+
+                    {% if cond and cond.get('red_flag') %}
+                    <div class="red-flag-alert mt-2 d-none">
+                        <div class="alert alert-danger py-2 mb-0">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <strong>Red Flag:</strong> {{ cond.red_flag.label }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="d-flex gap-2 mb-4">
+    <button class="btn btn-outline-primary btn-lg flex-grow-1" onclick="navigateModule(-1)">
+        <i class="bi bi-chevron-left"></i> Anterior
+    </button>
+    <button class="btn btn-outline-primary btn-lg flex-grow-1" onclick="navigateModule(1)">
+        Próximo <i class="bi bi-chevron-right"></i>
+    </button>
+</div>
+
+<div class="d-grid mb-5">
+    <button class="btn btn-success btn-lg" onclick="finalizarAuditoria()">
+        <i class="bi bi-check-lg"></i> Finalizar Auditoria
+    </button>
+</div>
+
+<!-- Modal de confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Finalizar Auditoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="redFlagsWarning" class="alert alert-danger d-none">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Existem Red Flags ativas. Descreva as observações antes de finalizar.
+                </div>
+                <p id="confirmText">Tem certeza que deseja finalizar esta auditoria?</p>
+                <div id="redFlagsList" class="mb-3"></div>
+                <div class="mb-3">
+                    <label class="form-label">Observações finais (obrigatório se houver Red Flags):</label>
+                    <textarea id="observacoesFinais" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="confirmarFinalizar()">
+                    <i class="bi bi-check-lg"></i> Confirmar e Finalizar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SESSION_ID = {{ session.id }};
+const ALL_QUESTIONS = {{ all_questions_json | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/condicionais.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fotos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/score.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,8 @@
+flask==3.1.*
+flask-sqlalchemy==3.1.*
+flask-jwt-extended==4.7.*
+flask-migrate==4.1.*
+weasyprint==65.*
+gunicorn==23.*
+Pillow==11.*
+bcrypt==4.3.*

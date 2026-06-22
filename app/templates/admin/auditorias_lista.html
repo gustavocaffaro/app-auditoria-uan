@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Todas as Auditorias{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="bi bi-list-check"></i> Todas as Auditorias</h5>
+    <span class="badge bg-secondary fs-6">{{ sessions|length }} registros</span>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>UAN</th>
+                        <th>Data</th>
+                        <th>Auditor</th>
+                        <th>Status</th>
+                        <th>Pontuação</th>
+                        <th>Classificação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in sessions %}
+                    <tr>
+                        <td>{{ s.uan_nome }}</td>
+                        <td><small>{{ s.data_auditoria }}</small></td>
+                        <td><small>{{ s.auditor.nome }}</small></td>
+                        <td>
+                            {% if s.status == 'finalizado' %}
+                            <span class="badge bg-success">Finalizado</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Andamento</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.pontuacao %}
+                            {{ "%.1f"|format(s.pontuacao) }}%
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.classificacao %}
+                            <span class="badge
+                                {% if s.classificacao == 'Excelente' %}bg-success
+                                {% elif s.classificacao == 'Bom' %}bg-primary
+                                {% elif s.classificacao == 'Regular' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %}">
+                                {{ s.classificacao }}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if s.status == 'finalizado' %}
+                            <a href="{{ url_for('admin.auditoria_detalhe', id=s.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('export.download_csv', id=s.id) }}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-earmark-spreadsheet"></i>
+                            </a>
+                            <a href="{{ url_for('export.download_pdf', id=s.id) }}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('audit.questionario', id=s.id) }}" class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

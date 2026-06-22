@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Resultado - {{ session.uan_nome }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center p-4">
+                <h4 class="mb-3">Resultado da Auditoria</h4>
+                <h5 class="text-muted">{{ session.uan_nome }}</h5>
+
+                <div class="display-1 my-3 {% if session.classificacao == 'Excelente' %}text-success
+                    {% elif session.classificacao == 'Bom' %}text-primary
+                    {% elif session.classificacao == 'Regular' %}text-warning
+                    {% else %}text-danger{% endif %}">
+                    {{ "%.1f"|format(session.pontuacao) }}%
+                </div>
+
+                {% set cls = session.classificacao %}
+                <span class="badge fs-5 px-3 py-2
+                    {% if cls == 'Excelente' %}bg-success
+                    {% elif cls == 'Bom' %}bg-primary
+                    {% elif cls == 'Regular' %}bg-warning text-dark
+                    {% else %}bg-danger{% endif %}">
+                    {{ cls }}
+                </span>
+
+                <hr class="my-3">
+
+                <div class="row text-start">
+                    <div class="col-6"><strong>UAN:</strong> {{ session.uan_nome }}</div>
+                    <div class="col-6"><strong>Endereço:</strong> {{ session.uan_endereco or 'N/A' }}</div>
+                    <div class="col-6"><strong>Data:</strong> {{ session.data_auditoria }}</div>
+                    <div class="col-6"><strong>Auditor:</strong> {{ auditor.nome }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if red_flags %}
+        <div class="card shadow-sm mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle-fill"></i> Falhas Graves (Red Flags) Detectadas
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for rf in red_flags %}
+                    <li class="list-group-item text-danger">
+                        <strong>{{ rf.code }}:</strong> {{ rf.label }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for md in modules %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <span><strong>{{ md.module.nome }}</strong></span>
+                <span class="badge bg-info">{{ md.module.questions.count() }} perguntas</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Pergunta</th>
+                                <th>Resposta</th>
+                                <th>Observação</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for qd in md.questions %}
+                            {% set q = qd.question %}
+                            {% set r = qd.response %}
+                            <tr class="{% if qd.is_red_flag %}table-danger{% endif %}">
+                                <td><small>{{ q.codigo }}</small></td>
+                                <td><small>{{ q.pergunta|truncate(60) }}</small></td>
+                                <td>
+                                    {% if r and r.resposta %}
+                                    <span class="badge {% if qd.is_red_flag %}bg-danger{% else %}bg-success{% endif %}">
+                                        {{ r.resposta }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r and r.observacao %}
+                                    <small>{{ r.observacao|truncate(40) }}</small>
+                                    {% endif %}
+                                    {% if r and r.foto_path %}
+                                    <br><small class="text-primary"><i class="bi bi-camera"></i> Foto</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-flex gap-2 mb-5">
+            <a href="{{ url_for('export.download_csv', id=session.id) }}" class="btn btn-outline-primary flex-grow-1">
+                <i class="bi bi-download"></i> CSV
+            </a>
+            <a href="{{ url_for('export.download_pdf', id=session.id) }}" class="btn btn-outline-danger flex-grow-1">
+                <i class="bi bi-file-pdf"></i> PDF
+            </a>
+            <a href="{{ url_for('audit.nova') }}" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-plus-circle"></i> Nova
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

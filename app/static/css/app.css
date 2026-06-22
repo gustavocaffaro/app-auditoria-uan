@@ -1,0 +1,200 @@
+:root {
+    --primary: #1a56db;
+    --success: #059669;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.login-bg {
+    background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    border: none;
+    border-radius: 16px;
+}
+
+.login-card .card-body {
+    border-radius: 16px;
+}
+
+.navbar { min-height: 56px; }
+.navbar-brand { font-weight: 700; font-size: 1.1rem; }
+.nav-link { font-size: 0.9rem; }
+
+.red-flag-bar {
+    background: var(--danger);
+    color: white;
+    padding: 8px 16px;
+    font-weight: 600;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+.card { border: none; border-radius: 12px; }
+.card-header { border-radius: 12px 12px 0 0 !important; }
+
+.form-control, .form-select {
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    min-height: 48px;
+    font-size: 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+}
+
+.btn {
+    border-radius: 10px;
+    min-height: 48px;
+    font-weight: 600;
+    padding: 12px 20px;
+}
+
+.btn-lg { min-height: 52px; }
+
+.btn-primary { background: var(--primary); border-color: var(--primary); }
+.btn-success { background: var(--success); border-color: var(--success); }
+.btn-warning { background: var(--warning); border-color: var(--warning); }
+.btn-danger { background: var(--danger); border-color: var(--danger); }
+
+.question-card {
+    background: var(--card);
+    transition: box-shadow 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.question-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+.question-card.has-response {
+    border-left-color: var(--success);
+    background: #f0fdf4;
+}
+
+.question-card.has-red-flag {
+    border-left-color: var(--danger);
+    background: #fef2f2;
+}
+
+.question-label { font-size: 0.95rem; line-height: 1.4; }
+
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.form-check-input:checked + .form-check-label { font-weight: 600; }
+
+.form-check-input {
+    width: 22px;
+    height: 22px;
+    margin-top: 3px;
+}
+
+.form-check-label {
+    padding-top: 2px;
+    font-size: 0.95rem;
+}
+
+.nav-pills .nav-link {
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    background: #f1f5f9;
+    color: var(--text);
+    border: 1px solid #e2e8f0;
+}
+
+.nav-pills .nav-link.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.progress { border-radius: 10px; }
+.progress-bar { border-radius: 10px; transition: width 0.5s ease; }
+
+.toast-container { z-index: 1060; }
+
+.foto-preview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.extra-field {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 576px) {
+    .container { padding-left: 12px; padding-right: 12px; }
+    .question-card { padding: 12px !important; }
+    .btn { font-size: 0.9rem; }
+    h5 { font-size: 1rem; }
+    .display-1 { font-size: 3rem; }
+}
+
+@media (min-width: 768px) {
+    .question-label { font-size: 1.05rem; }
+}
+
+.toast-custom {
+    background: var(--card);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.badge { font-weight: 500; }
+.table > :not(caption) > * > * { padding: 8px 12px; }
+.list-group-item { border-left: none; border-right: none; }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    padding: 4px;
+    cursor: pointer;
+}
