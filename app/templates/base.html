@@ -20,9 +20,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    {% if current_user.tipo == 'admin' %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('audit.nova') }}"><i class="bi bi-plus-circle"></i> Nova</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('audit.historico') }}"><i class="bi bi-clock-history"></i> Histórico</a></li>
-                    {% if current_user and current_user.tipo == 'admin' %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-gear"></i> Admin
@@ -34,6 +34,9 @@
                             <li><a class="dropdown-item" href="{{ url_for('admin.auditorias') }}"><i class="bi bi-list-check"></i> Auditorias</a></li>
                         </ul>
                     </li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('audit.nova') }}"><i class="bi bi-plus-circle"></i> Nova Auditoria</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('audit.historico') }}"><i class="bi bi-pencil"></i> Editar Auditoria</a></li>
                     {% endif %}
                     <li class="nav-item"><a class="nav-link" href="#" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
                 </ul>

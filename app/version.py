@@ -1,2 +1,2 @@
-VERSION = '1.4.0'
-VERSION_NAME = 'Estagiários reeditam próprias auditorias'
+VERSION = '1.5.0'
+VERSION_NAME = 'Instituicao + nav estagiario simplificado'

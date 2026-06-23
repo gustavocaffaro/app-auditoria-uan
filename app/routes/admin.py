@@ -76,7 +76,14 @@ def criar_usuario():
     if User.query.filter_by(email=email).first():
         return jsonify({'error': 'Email já cadastrado'}), 400
 
-    user = User(nome=nome, email=email, tipo=tipo, ativo=True)
+    user = User(
+        nome=nome,
+        email=email,
+        tipo=tipo,
+        ativo=True,
+        instituicao=data.get('instituicao', '').strip() or None,
+        endereco=data.get('endereco', '').strip() or None
+    )
     user.set_senha(senha)
     db.session.add(user)
     db.session.commit()
@@ -105,6 +112,10 @@ def editar_usuario(id):
         user.set_senha(senha)
     if tipo:
         user.tipo = tipo
+    if 'instituicao' in data:
+        user.instituicao = data['instituicao'].strip() or None
+    if 'endereco' in data:
+        user.endereco = data['endereco'].strip() or None
 
     db.session.commit()
     return jsonify({'ok': True, 'user': user.to_dict()})

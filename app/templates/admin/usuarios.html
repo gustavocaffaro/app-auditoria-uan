@@ -17,9 +17,9 @@
                     <tr>
                         <th>Nome</th>
                         <th>Email</th>
+                        <th>Instituição</th>
                         <th>Tipo</th>
                         <th>Status</th>
-                        <th>Criado em</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -28,6 +28,7 @@
                     <tr id="user-row-{{ user.id }}">
                         <td>{{ user.nome }}</td>
                         <td><small>{{ user.email }}</small></td>
+                        <td><small>{{ user.instituicao or '—' }}</small></td>
                         <td>
                             <span class="badge {% if user.tipo == 'admin' %}bg-danger{% else %}bg-info{% endif %}">
                                 {{ user.tipo }}
@@ -38,12 +39,11 @@
                                 {{ 'Ativo' if user.ativo else 'Inativo' }}
                             </span>
                         </td>
-                        <td><small>{{ user.created_at.strftime('%d/%m/%Y') if user.created_at else '—' }}</small></td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="editarUsuario({{ user.id }})">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editarUsuario({{ user.id }})">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="btn btn-sm {% if user.ativo %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                            <button class="btn btn-sm {% if user.ativo %}btn-outline-warning{% else %}btn-outline-success{% endif %} py-0 px-1"
                                     onclick="toggleUsuario({{ user.id }})">
                                 <i class="bi {% if user.ativo %}bi-pause-circle{% else %}bi-play-circle{% endif %}"></i>
                             </button>
@@ -67,21 +67,31 @@
             <form id="usuarioForm" onsubmit="return salvarUsuario(event)">
                 <div class="modal-body">
                     <input type="hidden" id="userId">
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <label class="form-label">Nome</label>
-                        <input type="text" id="userNome" class="form-control form-control-lg" required>
+                        <input type="text" id="userNome" class="form-control" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" id="userEmail" class="form-control form-control-lg" required>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="userEmail" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Senha <small class="text-muted">(em branco = manter)</small></label>
+                            <input type="password" id="userSenha" class="form-control">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Senha <small class="text-muted">(deixe em branco para manter)</small></label>
-                        <input type="password" id="userSenha" class="form-control form-control-lg">
+                    <div class="mb-2">
+                        <label class="form-label">Instituição</label>
+                        <input type="text" id="userInstituicao" class="form-control" placeholder="Ex: Lar São Francisco">
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-2">
+                        <label class="form-label">Endereço da Instituição</label>
+                        <input type="text" id="userEndereco" class="form-control" placeholder="Rua, número, bairro">
+                    </div>
+                    <div class="mb-2">
                         <label class="form-label">Tipo</label>
-                        <select id="userTipo" class="form-select form-select-lg">
+                        <select id="userTipo" class="form-select">
                             <option value="estagiario">Estagiário</option>
                             <option value="admin">Administrador</option>
                         </select>
@@ -99,19 +109,21 @@
 
 {% block scripts %}
 <script>
-async function abrirCriarUsuario() {
+function abrirCriarUsuario() {
     document.getElementById('modalTitle').textContent = 'Novo Usuário';
     document.getElementById('userId').value = '';
     document.getElementById('userNome').value = '';
     document.getElementById('userEmail').value = '';
     document.getElementById('userSenha').value = '';
     document.getElementById('userSenha').required = true;
+    document.getElementById('userInstituicao').value = '';
+    document.getElementById('userEndereco').value = '';
     document.getElementById('userTipo').value = 'estagiario';
     new bootstrap.Modal(document.getElementById('usuarioModal')).show();
 }
 
-async function editarUsuario(id) {
-    const row = document.getElementById(`user-row-${id}`);
+function editarUsuario(id) {
+    const row = document.getElementById('user-row-' + id);
     const cells = row.cells;
     document.getElementById('modalTitle').textContent = 'Editar Usuário';
     document.getElementById('userId').value = id;
@@ -119,7 +131,9 @@ async function editarUsuario(id) {
     document.getElementById('userEmail').value = cells[1].textContent.trim();
     document.getElementById('userSenha').value = '';
     document.getElementById('userSenha').required = false;
-    document.getElementById('userTipo').value = cells[2].textContent.trim();
+    document.getElementById('userInstituicao').value = cells[2].textContent.trim() === '—' ? '' : cells[2].textContent.trim();
+    document.getElementById('userEndereco').value = '';
+    document.getElementById('userTipo').value = cells[3].textContent.trim();
     new bootstrap.Modal(document.getElementById('usuarioModal')).show();
 }
 
@@ -130,10 +144,12 @@ async function salvarUsuario(e) {
         nome: document.getElementById('userNome').value,
         email: document.getElementById('userEmail').value,
         senha: document.getElementById('userSenha').value,
-        tipo: document.getElementById('userTipo').value
+        tipo: document.getElementById('userTipo').value,
+        instituicao: document.getElementById('userInstituicao').value,
+        endereco: document.getElementById('userEndereco').value
     };
 
-    const url = id ? `/admin/usuarios/${id}/editar` : '/admin/usuarios/criar';
+    const url = id ? '/admin/usuarios/' + id + '/editar' : '/admin/usuarios/criar';
     try {
         const resp = await fetch(url, {
             method: 'POST',
@@ -156,7 +172,7 @@ async function salvarUsuario(e) {
 async function toggleUsuario(id) {
     if (!confirm('Tem certeza?')) return;
     try {
-        const resp = await fetch(`/admin/usuarios/${id}/toggle`, { method: 'POST' });
+        const resp = await fetch('/admin/usuarios/' + id + '/toggle', { method: 'POST' });
         if (resp.ok) location.reload();
     } catch (err) {
         alert('Erro de conexão');

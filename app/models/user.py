@@ -12,6 +12,8 @@ class User(db.Model):
     senha_hash = db.Column(db.String(200), nullable=False)
     tipo = db.Column(db.String(20), nullable=False, default='estagiario')
     ativo = db.Column(db.Boolean, default=True)
+    instituicao = db.Column(db.String(300))
+    endereco = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     sessions = db.relationship('AuditSession', backref='auditor', lazy='dynamic')
@@ -29,5 +31,7 @@ class User(db.Model):
             'email': self.email,
             'tipo': self.tipo,
             'ativo': self.ativo,
+            'instituicao': self.instituicao,
+            'endereco': self.endereco,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
