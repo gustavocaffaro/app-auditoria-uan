@@ -130,6 +130,22 @@ def toggle_usuario(id):
     return jsonify({'ok': True, 'ativo': user.ativo})
 
 
+@admin_bp.route('/usuarios/<int:id>/excluir', methods=['POST'])
+@admin_required
+def excluir_usuario(id):
+    user = User.query.get_or_404(id)
+    if user.tipo == 'admin':
+        return jsonify({'error': 'Não é possível excluir um administrador'}), 400
+    from app.models import AuditSession, Response
+    sessions = AuditSession.query.filter_by(user_id=id).all()
+    for s in sessions:
+        Response.query.filter_by(session_id=s.id).delete()
+        db.session.delete(s)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'ok': True, 'deleted_sessions': len(sessions)})
+
+
 @admin_bp.route('/auditorias')
 @admin_required
 def auditorias():

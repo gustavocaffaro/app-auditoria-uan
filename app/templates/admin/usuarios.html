@@ -47,6 +47,11 @@
                                     onclick="toggleUsuario({{ user.id }})">
                                 <i class="bi {% if user.ativo %}bi-pause-circle{% else %}bi-play-circle{% endif %}"></i>
                             </button>
+                            {% if user.tipo != 'admin' %}
+                            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="excluirUsuario({{ user.id }}, '{{ user.nome }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -174,6 +179,26 @@ async function toggleUsuario(id) {
     try {
         const resp = await fetch('/admin/usuarios/' + id + '/toggle', { method: 'POST' });
         if (resp.ok) location.reload();
+    } catch (err) {
+        alert('Erro de conexão');
+    }
+}
+
+async function excluirUsuario(id, nome) {
+    const msg = 'Excluir "' + nome + '" permanentemente?\n\n' +
+                'Todas as auditorias e respostas deste usuário também serão removidas.';
+    if (!confirm(msg)) return;
+    try {
+        const resp = await fetch('/admin/usuarios/' + id + '/excluir', { method: 'POST' });
+        const data = await resp.json();
+        if (data.ok) {
+            const row = document.querySelector('button[onclick*="excluirUsuario(' + id)');
+            if (row) { const tr = row.closest('tr'); if (tr) tr.remove(); }
+            const qtd = data.deleted_sessions || 0;
+            mostrarToast('Usuário excluído' + (qtd ? ' (' + qtd + ' auditorias removidas)' : ''), 'warning');
+        } else {
+            alert(data.error || 'Erro ao excluir');
+        }
     } catch (err) {
         alert('Erro de conexão');
     }

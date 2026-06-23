@@ -1,2 +1,2 @@
-VERSION = '1.5.0'
-VERSION_NAME = 'Instituicao + nav estagiario simplificado'
+VERSION = '1.5.1'
+VERSION_NAME = 'Excluir usuario'
