@@ -30,7 +30,7 @@
                 <div class="row text-start">
                     <div class="col-6"><strong>UAN:</strong> {{ session.uan_nome }}</div>
                     <div class="col-6"><strong>Endereço:</strong> {{ session.uan_endereco or 'N/A' }}</div>
-                    <div class="col-6"><strong>Data:</strong> {{ session.data_auditoria }}</div>
+                    <div class="col-6"><strong>Data:</strong> {{ session.data_auditoria or '—' }}</div>
                     <div class="col-6"><strong>Auditor:</strong> {{ auditor.nome }}</div>
                 </div>
             </div>

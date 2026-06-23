@@ -155,7 +155,7 @@
                     {% for s in ultimas_auditorias %}
                     <tr>
                         <td>{{ s.uan_nome }}</td>
-                        <td><small>{{ s.data_auditoria }}</small></td>
+                        <td><small>{{ s.data_auditoria or '—' }}</small></td>
                         <td><small>{{ s.auditor.nome }}</small></td>
                         <td>
                             {% if s.status == 'finalizado' %}

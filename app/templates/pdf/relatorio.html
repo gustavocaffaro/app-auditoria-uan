@@ -148,7 +148,7 @@
     <table class="info-table">
         <tr><td>UAN</td><td>{{ session.uan_nome }}</td></tr>
         <tr><td>Endereço</td><td>{{ session.uan_endereco or 'N/A' }}</td></tr>
-        <tr><td>Data</td><td>{{ session.data_auditoria }}</td></tr>
+        <tr><td>Data</td><td>{{ session.data_auditoria or '—' }}</td></tr>
         <tr><td>Auditor</td><td>{{ auditor.nome }}</td></tr>
         <tr><td>Status</td><td>{{ 'Finalizado' if session.status == 'finalizado' else 'Em andamento' }}</td></tr>
     </table>

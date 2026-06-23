@@ -5,33 +5,17 @@
 <div class="row justify-content-center">
     <div class="col-lg-6">
         <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h4 class="card-title mb-4"><i class="bi bi-plus-circle"></i> Nova Auditoria</h4>
-
-                {% if erro %}
-                <div class="alert alert-danger py-2">{{ erro }}</div>
+            <div class="card-body p-4 text-center">
+                <i class="bi bi-building text-primary" style="font-size: 3rem;"></i>
+                <h4 class="card-title mt-2">{{ user.instituicao or 'Auditoria UAN' }}</h4>
+                {% if user.endereco %}
+                <p class="text-muted mb-0">{{ user.endereco }}</p>
                 {% endif %}
-
-                <form id="novaForm" onsubmit="return criarAuditoria(event)">
-                    <div class="mb-3">
-                        <label class="form-label">Nome da UAN <span class="text-danger">*</span></label>
-                        <input type="text" name="uan_nome" class="form-control form-control-lg" required
-                               placeholder="Ex: Lar São Francisco de Assis">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Endereço da UAN</label>
-                        <input type="text" name="uan_endereco" class="form-control form-control-lg"
-                               placeholder="Rua, número, bairro, cidade">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Data da Auditoria</label>
-                        <input type="date" name="data_auditoria" class="form-control form-control-lg"
-                               value="{{ now().strftime('%Y-%m-%d') }}">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-lg w-100" id="btnIniciar">
-                        <i class="bi bi-play-fill"></i> Iniciar Auditoria
-                    </button>
-                </form>
+                <hr>
+                <p class="text-muted">A data será registrada automaticamente ao finalizar a auditoria.</p>
+                <button class="btn btn-primary btn-lg w-100" id="btnIniciar" onclick="iniciarAuditoria()">
+                    <i class="bi bi-play-fill"></i> Iniciar Auditoria
+                </button>
             </div>
         </div>
     </div>
@@ -40,24 +24,16 @@
 
 {% block scripts %}
 <script>
-async function criarAuditoria(e) {
-    e.preventDefault();
-    const form = e.target;
+async function iniciarAuditoria() {
     const btn = document.getElementById('btnIniciar');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Criando...';
-
-    const data = {
-        uan_nome: form.uan_nome.value,
-        uan_endereco: form.uan_endereco.value,
-        data_auditoria: form.data_auditoria.value
-    };
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Iniciando...';
 
     try {
         const resp = await fetch('{{ url_for("audit.nova") }}', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
+            body: '{}'
         });
         const result = await resp.json();
         if (resp.ok) {
@@ -72,7 +48,6 @@ async function criarAuditoria(e) {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-play-fill"></i> Iniciar Auditoria';
     }
-    return false;
 }
 </script>
 {% endblock %}

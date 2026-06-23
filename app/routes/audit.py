@@ -18,30 +18,17 @@ def allowed_file(filename):
 @audit_bp.route('/nova', methods=['GET', 'POST'])
 @jwt_required()
 def nova():
-    if request.method == 'GET':
-        return render_template('audit/nova.html')
-
-    data = request.get_json() or request.form
     user_id = int(get_jwt_identity())
-    uan_nome = data.get('uan_nome', '').strip()
-    uan_endereco = data.get('uan_endereco', '').strip()
-    data_auditoria_str = data.get('data_auditoria', '').strip()
+    user = User.query.get(user_id)
 
-    if not uan_nome:
-        if request.is_json:
-            return jsonify({'error': 'Nome da UAN é obrigatório'}), 400
-        return render_template('audit/nova.html', erro='Nome da UAN é obrigatório')
-
-    try:
-        data_auditoria = datetime.strptime(data_auditoria_str, '%Y-%m-%d').date()
-    except (ValueError, TypeError):
-        data_auditoria = date.today()
+    if request.method == 'GET':
+        return render_template('audit/nova.html', user=user)
 
     session = AuditSession(
         user_id=user_id,
-        uan_nome=uan_nome,
-        uan_endereco=uan_endereco,
-        data_auditoria=data_auditoria,
+        uan_nome=user.instituicao or 'UAN sem nome',
+        uan_endereco=user.endereco or '',
+        data_auditoria=None,
         status='andamento'
     )
     db.session.add(session)
@@ -264,6 +251,8 @@ def finalizar(id):
     else:
         session.classificacao = session.calcular_classificacao()
 
+    if not session.data_auditoria:
+        session.data_auditoria = date.today()
     session.status = 'finalizado'
     session_db.commit()
 

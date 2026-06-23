@@ -9,7 +9,7 @@ class AuditSession(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     uan_nome = db.Column(db.String(300), nullable=False)
     uan_endereco = db.Column(db.String(500))
-    data_auditoria = db.Column(db.Date, nullable=False)
+    data_auditoria = db.Column(db.Date, nullable=True)
     status = db.Column(db.String(20), default='andamento')
     pontuacao = db.Column(db.Float)
     classificacao = db.Column(db.String(20))

@@ -1,2 +1,2 @@
-VERSION = '1.5.1'
-VERSION_NAME = 'Excluir usuario'
+VERSION = '1.6.0'
+VERSION_NAME = 'Auto instituicao + data na finalizacao'
